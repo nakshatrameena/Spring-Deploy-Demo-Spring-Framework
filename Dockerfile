@@ -18,7 +18,6 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8080
-EXPOSE 8081
 
 # JVM flags for containers (memory awareness + virtual threads friendly)
 ENTRYPOINT ["java", \
