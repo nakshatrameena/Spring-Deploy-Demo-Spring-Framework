@@ -25,4 +25,10 @@ ENTRYPOINT ["java", \
     "-XX:+UseG1GC", \
     "-XX:+UseStringDeduplication", \
     "-jar", \
-    "app.jar"]
+    "app.jar", "--server.port=${PORT:8080}"]
+
+    FROM sapmachine:26-jdk-ubuntu-noble AS builder
+
+    RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+
+    FROM sapmachine:26-jre-ubuntu-noble
