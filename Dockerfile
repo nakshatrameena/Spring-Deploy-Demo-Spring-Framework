@@ -1,38 +1,36 @@
-# Build stage
-FROM eclipse-temurin:26-jdk-jammy AS builder
+# Stage 1: Build Stage
+FROM openjdk:26-slim AS builder
 WORKDIR /build
+
+# Copy all files
 COPY . .
+
+# Fix permissions BEFORE running maven
+RUN chmod +x mvnw
+
+# Build the application
 RUN ./mvnw clean package -DskipTests --no-transfer-progress
 
-# Runtime stage (slim, secure, fast startup)
-FROM eclipse-temurin:26-jre-jammy
+# Stage 2: Runtime stage
+FROM openjdk:26-slim
 WORKDIR /app
 
-# Create non-root user (security)
+# Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
+# Copy the built jar from the builder stage
 COPY --from=builder /build/target/*.jar app.jar
 
-# Set ownership and permissions
+# Set ownership
 RUN chown -R appuser:appuser /app
 USER appuser
 
+# Render uses dynamic ports; Spring Boot needs to know this
 EXPOSE 8080
 
-# JVM flags for containers (memory awareness + virtual threads friendly)
+# Optimized JVM flags for Render's Free Tier (512MB)
 ENTRYPOINT ["java", \
     "-XX:MaxRAMPercentage=75.0", \
-    "-XX:+UseG1GC", \
-    "-XX:+UseStringDeduplication", \
     "-jar", \
-    "app.jar"]
-
-    # ... after COPY . .
-WORKDIR /build
-COPY . .
-
-# ADD THIS LINE:
-RUN chmod +x mvnw
-
-# Then the next line will work
-RUN ./mvnw clean package -DskipTests --no-transfer-progress
+    "app.jar", \
+    "--server.port=${PORT:8080}"]
