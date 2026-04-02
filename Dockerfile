@@ -32,3 +32,9 @@ ENTRYPOINT ["java", \
     RUN chmod +x mvnw && ./mvnw clean package -DskipTests
 
     FROM sapmachine:26-jre-ubuntu-noble
+
+    FROM container-registry.oracle.com/java/openjdk:26 AS builder
+
+    RUN ./mvnw clean package -DskipTests
+
+    FROM container-registry.oracle.com/java/openjdk:26
