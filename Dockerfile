@@ -1,40 +1,15 @@
-# Build stage
-FROM eclipse-temurin:21-jdk-jammy AS builder
+# Stage 1: Build Stage (Oracle provides the fastest updates for new JDKs)
+FROM container-registry.oracle.com/java/openjdk:26 AS builder
 WORKDIR /build
 COPY . .
-RUN ./mvnw clean package -DskipTests --no-transfer-progress
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
 
-# Runtime stage (slim, secure, fast startup)
-FROM eclipse-temurin:21-jre-jammy
+# Stage 2: Runtime Stage
+FROM container-registry.oracle.com/java/openjdk:26
 WORKDIR /app
-
-# Create non-root user (security)
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
 COPY --from=builder /build/target/*.jar app.jar
 
-# Set ownership and permissions
-RUN chown -R appuser:appuser /app
-USER appuser
-
+# Railway uses a dynamic PORT variable
 EXPOSE 8080
-
-# JVM flags for containers (memory awareness + virtual threads friendly)
-ENTRYPOINT ["java", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-XX:+UseG1GC", \
-    "-XX:+UseStringDeduplication", \
-    "-jar", \
-    "app.jar", "--server.port=${PORT:8080}"]
-
-    FROM sapmachine:26-jdk-ubuntu-noble AS builder
-
-    RUN chmod +x mvnw && ./mvnw clean package -DskipTests
-
-    FROM sapmachine:26-jre-ubuntu-noble
-
-    FROM container-registry.oracle.com/java/openjdk:26 AS builder
-
-    RUN ./mvnw clean package -DskipTests
-
-    FROM container-registry.oracle.com/java/openjdk:26
+ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=${PORT:8080}"]
