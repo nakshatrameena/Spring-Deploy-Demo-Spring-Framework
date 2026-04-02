@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: spring-deploy-demo
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDER=HIGH}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 5s
+    max-connections: 10000
+    threads:
+      max: 200
+      min-spare: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.nakshatra: DEBUG
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
