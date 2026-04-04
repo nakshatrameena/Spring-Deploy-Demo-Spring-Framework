@@ -64,7 +64,14 @@ public String signupPage() {
         // Fetch real user data for the Modal
         User dbUser = userRepository.findByUsername(username);
         String fullName = (dbUser != null) ? dbUser.getName() : "Guest User";
-        String email = (dbUser != null) ? dbUser.getEmail() : "N/A";
+String email = (dbUser != null) ? dbUser.getEmail() : null;
+
+// 🔐 Mask email
+String maskedEmail = "N/A";
+if (email != null && email.contains("@")) {
+    int atIndex = email.indexOf("@");
+    maskedEmail = email.charAt(0) + "****" + email.substring(atIndex);
+}
 
         return "<!DOCTYPE html>" +
                "<html lang='en'>" +
